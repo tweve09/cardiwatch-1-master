@@ -52,7 +52,7 @@
             padding: 4px;
             border: 1px solid #888;
             width: 50%;
-            max-width: 500px;
+            max-width: 550px;
           }
           
           .modal-header {
@@ -79,7 +79,12 @@
           .btn-custom:hover {
             background-color: #05b0bf;
           }
+          #ecgChart {
+            width: 500px;
+            height: 400px;
+        }
     </style>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-light nav" style="box-shadow: 0 4px 8px 0 rgba(149, 149, 149, 0.2);">
@@ -148,7 +153,7 @@
                         <td>
                             
                           <!-- button -->
-                          <button style="background-color: #008894; color: white;"  class="ecgBtn btn" data-toggle="modal" data-target="#myModal" data-user-id="<%=result.ecg%>" >View ECG</button>
+                          <button style="background-color: #008894; color: white;"  class="ecgBtn btn" data-toggle="modal" data-target="#myModal" data-user-id=<%= result.id %>>View ECG</button>
 
                             <!-- The modal -->
                             <div id="myModal" class="modal">
@@ -158,7 +163,9 @@
                                 </div>
                                 <div class="modal-body">
                                   <div class="text-center">
-                                    <canvas class="ecg-plot" id="ecgCanvas" width="400" height="300" style="background-color: black; border-radius: 8px;"></canvas>
+                                    <div id="ecgChart"></div>
+                                    <p>Heart rate: <span id="modal-heartrate" ></span> Bpm</p>
+                                    <p>Recorded at: <span id="modal-createdat"></span></p>
                                   </div>
                                 </div>
                                 <div class="modal-footer">
@@ -188,17 +195,13 @@
       </div>
       <script>
       // Get all ecgView buttons
-      const deleteButtons = document.querySelectorAll(".ecgBtn");
+      const viewButtons = document.querySelectorAll(".ecgBtn");
 
       // Attach click event listener to each delete button
-      deleteButtons.forEach((button) => {
+      viewButtons.forEach((button) => {
         button.addEventListener("click", function() {
-          const ecgdata = button.getAttribute("data-user-id"); 
-          console.log(ecgdata)
-          const dataArray = ecgdata.split(",");
-          const ecgData = dataArray.map(Number);
-
-          openModal(ecgData);
+          const data_id = button.getAttribute("data-user-id"); 
+          openModal(data_id);
         });
       });
 
@@ -210,44 +213,86 @@
       }
       
       // Function to open the modal and handle the confirm button click event
-      function openModal(ecgData) {
+      function openModal(data_id) {
         const modal = document.getElementById("myModal")
         const cancelBtn = document.getElementById("cancelBtn")
+
         cancelBtn.addEventListener("click", function(){
           closeModal()
           location.reload()
         })
         modal.style.display = "block";
-        const canvas = document.getElementById("ecgCanvas");
-          const ctx = canvas.getContext("2d");
-          ctx.fillStyle = "#dbbd7a";
-          ctx.fill();
-  
-          var fps = 60;
-          var n = 1;
-          const ecg_data = ecgData;
-          drawWave();
-  
-          function drawWave() {
-              setTimeout(function() {
-                  requestAnimationFrame(drawWave);
-                  ctx.lineWidth = "2";
-                  ctx.strokeStyle = 'green';
-  
-                  // Drawing code goes here
-                  n += 1;
-                  if (n >= ecg_data.length) {
-                      n = 1;
-                  }
-                  ctx.beginPath();
-                  ctx.moveTo(n - 1, ecg_data[n - 1]);
-                  ctx.lineTo(n, ecg_data[n]);
-                  ctx.stroke();
-  
-                  ctx.clearRect(n+1, 0, 10, canvas.height);
-  
-                  }, 1000 / fps);
-              } 
+
+        // call the fetch function
+        fetchData()
+
+        function fetchData(){
+          // implement fetch function from database
+          const url = "http://localhost:3000/detail/database/viewecg"
+          const data = {
+            data_id: data_id
+          }
+          fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+            body: JSON.stringify(data)
+          })
+          .then(response => response.json())
+          .then(data => {
+            const createdAt = data.data[0].formatted_time
+            const heartRate = data.data[0].heart_rate
+            const ecgdata  = data.data[0].ecg
+            const dataArray = ecgdata.split(",");
+            const ecgData = dataArray.map(Number);
+            // Call the map function to plot only the ECG data
+            map_ecg_data(ecgData)
+            document.getElementById("modal-heartrate").innerText = heartRate
+            document.getElementById("modal-createdat").innerText = createdAt
+          })
+          .catch(error => {
+          console.error('Error fetching data:', error);
+          });
+        }
+
+
+        function map_ecg_data(ecg_data) {
+            const sampling_rate = 360; // Samples per second (Hz)
+            const time_scale = 1 / sampling_rate; // Time between consecutive samples (seconds)
+
+            // Calculate the time axis for the ECG data
+            const time_axis = ecg_data.map((_, index) => index * time_scale);
+
+            // Create a trace for the ECG data
+            const ecg_trace = {
+                x: time_axis,
+                y: ecg_data,
+                mode: 'lines',
+                line: {
+                    color: 'green',
+                    width: 2
+                },
+                name: 'ECG Data'
+            };
+
+            // Create the layout for the chart
+            const layout = {
+                title: 'ECG Data',
+                xaxis: {
+                    title: 'Time'
+                },
+                yaxis: {
+                    title: 'Voltage'
+                },
+                width: 500,
+                height: 400
+            };
+
+            // Combine the trace and layout, and plot the chart
+            const data = [ecg_trace];
+            Plotly.newPlot('ecgChart', data, layout);
+        }     
       }
       </script>
     

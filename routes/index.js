@@ -7,7 +7,8 @@ const {
     trialGet,
     patientBradycardia,
     patientTachycardia,
-    getPatientHRgraph
+    getPatientHRgraph,
+    patientDetailDatabase,
      } = require('../controllers/index-route')
 
 const { nodemcuPost } = require('../controllers/socket-conf')
@@ -18,6 +19,7 @@ router.get('/',IsAuth,checkUserRole,displayPatients)
 router.get("/detail/patient/:patientId",patientDetails)
 router.get("/detail/heart-rate", getPatientHRgraph)
 router.post("/detail/database",getPatientDatabase)
+router.post("/detail/database/viewecg", patientDetailDatabase)
 router.post("/detail/database/bradycardia",patientBradycardia)
 router.post("/detail/database/tachycardia", patientTachycardia)
 router.get('/trial',trialGet)
