@@ -262,7 +262,7 @@
             const time_scale = 1 / sampling_rate; // Time between consecutive samples (seconds)
 
             // Calculate the time axis for the ECG data
-            const time_axis = ecg_data.map((_, index) => index * time_scale);
+            const time_axis = ecg_data.map((_, index) => (index * time_scale)/5);
 
             // Create a trace for the ECG data
             const ecg_trace = {
@@ -270,7 +270,7 @@
                 y: ecg_data,
                 mode: 'lines',
                 line: {
-                    color: 'green',
+                    color: 'black',
                     width: 2
                 },
                 name: 'ECG Data'
@@ -278,13 +278,18 @@
 
             // Create the layout for the chart
             const layout = {
-                title: 'ECG Data',
+                title: 'ECG Wave',
                 xaxis: {
-                    title: 'Time'
+                    title: 'Time(s)',
+                    gridcolor: 'pink',
+                    gridwidth: 2,
                 },
                 yaxis: {
-                    title: 'Voltage'
+                    title: 'Voltage',
+                    gridcolor: 'pink',
+                    gridwidth: 2,
                 },
+                plot_bgcolor: "#FFD2D7",
                 width: 500,
                 height: 400
             };

@@ -36,7 +36,7 @@ const getPatientDatabase = (req, res, next)=>{
     db.query("SELECT * FROM cardiwatchdb.patient_table WHERE id = ?", [patient_id], (err, results)=>{
         if(err) throw err
         var patient = results
-        db.query("SELECT id,ecg,heart_rate, DATE_FORMAT(created_at, '%a-%M %d %H:%i') AS formatted_time FROM cardiwatchdb.health_data WHERE patient_id = ?", [patient_id], (err, results)=>{
+        db.query("SELECT id,ecg,heart_rate, DATE_FORMAT(created_at, '%a-%M %d %H:%i') AS formatted_time FROM cardiwatchdb.health_data WHERE patient_id = ? ORDER BY created_at DESC", [patient_id], (err, results)=>{
             if(err) throw err
             const modifiedData = results.map((row, index) => {
                 return { sn: index + 1, ...row }
@@ -54,7 +54,7 @@ const getPatientDatabase = (req, res, next)=>{
 
 const patientDetailDatabase = (req, res, next)=>{
     const data_id = req.body.data_id
-    db.query("SELECT ecg,heart_rate, DATE_FORMAT(created_at, '%a-%M %d %H:%i') AS formatted_time FROM cardiwatchdb.health_data WHERE id=?", [data_id],(err, results)=>{
+    db.query("SELECT ecg,heart_rate, DATE_FORMAT(created_at, '%a-%M %d %H:%i') AS formatted_time FROM cardiwatchdb.health_data WHERE id=? ORDER BY created_at DESC", [data_id],(err, results)=>{
         if(err) throw err
         return res.send({"data": results})
     })
@@ -67,7 +67,7 @@ const patientBradycardia = (req,res, next)=>{
     db.query("SELECT * FROM cardiwatchdb.patient_table WHERE id = ?", [patient_id], (err, results)=>{
         if(err) throw err
         var patient = results
-        db.query("SELECT ecg,heart_rate, DATE_FORMAT(created_at, '%a-%M %d %H:%i') AS formatted_time FROM cardiwatchdb.health_data WHERE patient_id = ? AND heart_rate < 60", [patient_id], (err, results)=>{
+        db.query("SELECT ecg,heart_rate, DATE_FORMAT(created_at, '%a-%M %d %H:%i') AS formatted_time FROM cardiwatchdb.health_data WHERE patient_id = ? AND heart_rate < 60 ORDER BY created_at DESC", [patient_id], (err, results)=>{
             if(err) throw err
             const modifiedData = results.map((row, index) => {
                 return { sn: index + 1, ...row }
@@ -89,7 +89,7 @@ const patientTachycardia = (req, res, next)=>{
     db.query("SELECT * FROM cardiwatchdb.patient_table WHERE id = ?", [patient_id], (err, results)=>{
         if(err) throw err
         var patient = results
-        db.query("SELECT ecg,heart_rate, DATE_FORMAT(created_at, '%a-%M %d %H:%i') AS formatted_time FROM cardiwatchdb.health_data WHERE patient_id = ? AND heart_rate > 100", [patient_id], (err, results)=>{
+        db.query("SELECT ecg,heart_rate, DATE_FORMAT(created_at, '%a-%M %d %H:%i') AS formatted_time FROM cardiwatchdb.health_data WHERE patient_id = ? AND heart_rate > 100 ORDER BY created_at DESC", [patient_id], (err, results)=>{
             if(err) throw err
             const modifiedData = results.map((row, index) => {
                 return { sn: index + 1, ...row }
